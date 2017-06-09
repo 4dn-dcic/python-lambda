@@ -3,7 +3,6 @@ from __future__ import print_function
 import json
 import logging
 import os
-import sys
 import time
 from imp import load_source
 from shutil import copy, copyfile
@@ -111,12 +110,6 @@ def invoke(src, alt_event=None, verbose=False):
         path_to_event_file = os.path.join(src, 'event.json')
     event = read(path_to_event_file, loader=json.loads)
 
-    #Tweak to allow module to import local modules
-    try:
-        sys.path.index(src)
-    except:
-        sys.path.append(src)
-
     handler = cfg.get('handler')
     # Inspect the handler string (<module>.<function name>) and translate it
     # into a function we can execute.
@@ -149,10 +142,8 @@ def init(src, minimal=False):
     for filename in os.listdir(templates_path):
         if (minimal and filename == 'event.json') or filename.endswith('.pyc'):
             continue
-        dest_path = os.path.join(templates_path, filename)
-
-        if not os.path.isdir(dest_path):
-            copy(dest_path, src)
+        destination = os.path.join(templates_path, filename)
+        copy(destination, src)
 
 
 def build(src, requirements=False, local_package=None):
@@ -185,13 +176,6 @@ def build(src, requirements=False, local_package=None):
                           requirements=requirements,
                           local_package=local_package)
 
-    # Hack for Zope.
-    if "zope" in os.listdir(path_to_temp):
-        print("Zope packages detected; fixing Zope package paths to make them importable.")
-        # Touch.
-        with open(os.path.join(path_to_temp, "zope/__init__.py"), "wb"):
-            pass
-
     # Gracefully handle whether ".zip" was included in the filename or not.
     output_filename = ('{0}.zip'.format(output_filename)
                        if not output_filename.endswith('.zip')
@@ -204,7 +188,6 @@ def build(src, requirements=False, local_package=None):
                 continue
             if filename == 'config.yaml':
                 continue
-            print("Bundling: %r" % filename)
             files.append(os.path.join(src, filename))
 
     # "cd" into `temp_path` directory.
@@ -272,7 +255,7 @@ def _install_packages(path, packages):
             package = package.replace('-e ', '')
 
         print('Installing {package}'.format(package=package))
-        pip.main(['install', package, '-t', path, '--ignore-installed'])
+        pip.main(['install', package, '-t', path])
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):
@@ -300,15 +283,17 @@ def pip_install_to_target(path, requirements=False, local_package=None):
             print('Gathering requirement packages')
             data = read("requirements.txt")
             packages.extend(data.splitlines())
+        elif os.path.exists(requirements):
+            print('Gathering requirement from %s' % requirements)
+            data = read(requirements)
+            packages.extend(data.splitlines())
 
     if not packages:
         print('No dependency packages installed!')
 
     if local_package is not None:
-        if not isinstance(local_package, (list, tuple) ):
-            local_package = [local_package]
-        for l_package in local_package:
-            packages.append(l_package)
+        # TODO: actually sdist is probably bettter here...
+        packages.append(local_package)
     _install_packages(path, packages)
 
 
