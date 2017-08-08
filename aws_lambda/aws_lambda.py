@@ -62,7 +62,7 @@ def cleanup_old_versions(src, keep_last_versions):
                           .format(version_number, e.message))
 
 
-def deploy(src, requirements=False, local_package=None):
+def deploy(src, requirements=False, local_package=None, raw_copy=None):
     """Deploys a new function to AWS Lambda.
 
     :param str src:
@@ -80,7 +80,7 @@ def deploy(src, requirements=False, local_package=None):
     # folder then add the handler file in the root of this directory.
     # Zip the contents of this folder into a single file and output to the dist
     # directory.
-    path_to_zip_file = build(src, requirements, local_package)
+    path_to_zip_file = build(src, requirements, local_package, raw_copy)
 
     if function_exists(cfg, cfg.get('function_name')):
         update_function(cfg, path_to_zip_file)
@@ -146,7 +146,7 @@ def init(src, minimal=False):
         copy(destination, src)
 
 
-def build(src, requirements=False, local_package=None):
+def build(src, requirements=False, local_package=None, raw_copy=None):
     """Builds the file bundle.
 
     :param str src:
@@ -175,6 +175,25 @@ def build(src, requirements=False, local_package=None):
     pip_install_to_target(path_to_temp,
                           requirements=requirements,
                           local_package=local_package)
+
+    if raw_copy:
+        raw_files = []
+        for filename in os.listdir(raw_copy):
+            if os.path.isfile(filename):
+                if filename == '.DS_Store':
+                    continue
+                if filename == 'config.yaml':
+                    continue
+                raw_files.append(os.path.join(src, filename))
+
+        # "cd" into `temp_path` directory.
+        os.chdir(path_to_temp)
+        for f in raw_files:
+            _, filename = os.path.split(f)
+
+            # Copy handler file into root of the packages folder.
+            copyfile(f, os.path.join(path_to_temp, filename))
+
 
     # Gracefully handle whether ".zip" was included in the filename or not.
     output_filename = ('{0}.zip'.format(output_filename)
