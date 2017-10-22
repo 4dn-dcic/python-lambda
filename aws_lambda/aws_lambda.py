@@ -166,33 +166,21 @@ def build(src, requirements=False, local_package=None, raw_copy=None):
     path_to_dist = os.path.join(src, dist_directory)
     mkdir(path_to_dist)
 
+    path_to_temp = mkdtemp(prefix='aws-lambda')
+
+    if raw_copy:
+        bin_dir = os.path.join(path_to_temp, "lambda_bin")
+        import shutil
+        shutil.copytree(raw_copy, bin_dir)
+
     # Combine the name of the Lambda function with the current timestamp to use
     # for the output filename.
     function_name = cfg.get('function_name')
     output_filename = "{0}-{1}.zip".format(timestamp(), function_name)
 
-    path_to_temp = mkdtemp(prefix='aws-lambda')
     pip_install_to_target(path_to_temp,
                           requirements=requirements,
                           local_package=local_package)
-
-    if raw_copy:
-        raw_files = []
-        for filename in os.listdir(raw_copy):
-            if os.path.isfile(filename):
-                if filename == '.DS_Store':
-                    continue
-                if filename == 'config.yaml':
-                    continue
-                raw_files.append(os.path.join(src, filename))
-
-        # "cd" into `temp_path` directory.
-        os.chdir(path_to_temp)
-        for f in raw_files:
-            _, filename = os.path.split(f)
-
-            # Copy handler file into root of the packages folder.
-            copyfile(f, os.path.join(path_to_temp, filename))
 
 
     # Gracefully handle whether ".zip" was included in the filename or not.
