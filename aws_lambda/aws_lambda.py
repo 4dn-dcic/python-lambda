@@ -405,8 +405,8 @@ def function_exists(cfg, function_name):
     aws_secret_access_key = cfg.get('aws_secret_access_key')
     client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
                         cfg.get('region'))
-    functions = client.list_functions().get('Functions', [])
-    for fn in functions:
-        if fn.get('FunctionName') == function_name:
-            return True
-    return False
+    try:
+        client.get_function(FunctionaName=function_name)
+    except:
+        return False
+    return True
