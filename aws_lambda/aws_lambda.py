@@ -406,7 +406,7 @@ def function_exists(cfg, function_name):
     client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
                         cfg.get('region'))
     try:
-        client.get_function(FunctionaName=function_name)
+        client.get_function(FunctionName=function_name)
     except:
         return False
     return True
