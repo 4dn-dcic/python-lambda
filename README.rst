@@ -19,7 +19,7 @@ With python-lambda and `pytube <https://github.com/nficano/pytube/>`_ both conti
 Description
 ===========
 
-AWS Lambda is a service that allows you to write Python, Java, Node.js, C# or Go code that gets executed in response to events like http requests or files uploaded to S3.
+AWS Lambda is a service that allows you to write Python, Java, or Node.js code that gets executed in response to events like http requests or files uploaded to S3.
 
 Working with Lambda is relatively easy, but the process of bundling and deploying your code is not as simple as it could be.
 
@@ -28,7 +28,7 @@ The *Python-Lambda* library takes away the guess work of developing your Python-
 Requirements
 ============
 
-* Python 2.7 & 3.6 (At the time of writing this, AWS Lambda only supports Python 2.7/3.6).
+* Python 2.7 (At the time of writing this, AWS Lambda only supports Python 2.7).
 * Pip (~8.1.1)
 * Virtualenv (~15.0.0)
 * Virtualenvwrapper (~4.7.1)
@@ -150,63 +150,3 @@ Now try and run:
            --data '{"pi": 3.14, "e": 2.718}' \
            https://<API endpoint URL>
     # 5.8580000000000005
-
-Environment Variables
-=====================
-Lambda functions support environment variables. In order to set environment variables for your deployed code to use, you can configure them in ``config.yaml``.  To load the
-value for the environment variable at the time of deployment (instead of hard coding them in your configuration file), you can use local environment values (see 'env3' in example code below).
-
-.. code:: yaml
-
-  environment_variables:
-    env1: foo
-    env2: baz
-    env3: ${LOCAL_ENVIRONMENT_VARIABLE_NAME}
-
-This would create environment variables in the lambda instance upon deploy. If your functions don't need environment variables, simply leave this section out of your config.
-
-Uploading to S3
-===============
-You may find that you do not need the toolkit to fully deploy your Lambda or that your code bundle is too large to upload via the API.  You can use the ``upload`` command to send the bundle to an S3 bucket of your choosing.
-Before doing this, you will need to set the following variables in ``config.yaml``:
-
-.. code:: yaml
-
-    role: basic_s3_upload
-    bucket_name: 'example-bucket'
-    s3_key_prefix: 'path/to/file/'
-
-Your role must have ``s3:PutObject`` permission on the bucket/key that you specify for the upload to work properly. Once you have that set, you can execute ``lambda upload`` to initiate the transfer.
-
-Deploying via S3
-===============
-You can also choose to use S3 as your source for Lambda deployments.  This can be done by issuing ``lambda deploy_s3`` with the same variables/AWS permissions you'd set for executing the ``upload`` command.
-
-Development
-===========
-
-Development of "python-lambda" is facilitated exclusively on GitHub. Contributions in the form of patches, tests and feature creation and/or requests are very welcome and highly encouraged. Please open an issue if this tool does not function as you'd expect.
-
-
-How to release updates
-----------------------
-
-If this is the first time you're releasing to pypi, you'll need to run: ``pip install -r tests/dev_requirements.txt``.
-
-Once complete, execute the following commands:
-
-.. code:: bash
-
-    git checkout master
-
-    # Increment the version number and tag the release.
-    bumpversion [major|minor|patch]
-
-    # Upload the distribution to PyPi
-    python setup.py sdist bdist_wheel upload
-
-    # Since master often contains work-in-progress changes, increment the version
-    # to a patch release to prevent inaccurate attribution.
-    bumpversion --no-tag patch
-
-    git push origin master --tags

@@ -21,7 +21,9 @@ log = logging.getLogger(__name__)
 
 def cleanup_old_versions(src, keep_last_versions):
     """Deletes old deployed versions of the function in AWS Lambda.
+
     Won't delete $Latest and any aliased version
+
     :param str src:
         The path to your Lambda ready project (folder must contain a valid
         config.yaml and handler module (e.g.: service.py).
@@ -62,6 +64,7 @@ def cleanup_old_versions(src, keep_last_versions):
 
 def deploy(src, requirements=False, local_package=None, raw_copy=None):
     """Deploys a new function to AWS Lambda.
+
     :param str src:
         The path to your Lambda ready project (folder must contain a valid
         config.yaml and handler module (e.g.: service.py).
@@ -87,6 +90,7 @@ def deploy(src, requirements=False, local_package=None, raw_copy=None):
 
 def invoke(src, alt_event=None, verbose=False):
     """Simulates a call to your function.
+
     :param str src:
         The path to your Lambda ready project (folder must contain a valid
         config.yaml and handler module (e.g.: service.py).
@@ -126,6 +130,7 @@ def invoke(src, alt_event=None, verbose=False):
 
 def init(src, minimal=False):
     """Copies template files to a given directory.
+
     :param str src:
         The path to output the template lambda project files.
     :param bool minimal:
@@ -143,6 +148,7 @@ def init(src, minimal=False):
 
 def build(src, requirements=False, local_package=None, raw_copy=None):
     """Builds the file bundle.
+
     :param str src:
        The path to your Lambda ready project (folder must contain a valid
         config.yaml and handler module (e.g.: service.py).
@@ -208,6 +214,7 @@ def build(src, requirements=False, local_package=None, raw_copy=None):
 def get_callable_handler_function(src, handler):
     """Tranlate a string of the form "module.function" into a callable
     function.
+
     :param str src:
       The path to your Lambda project containing a valid handler file.
     :param str handler:
@@ -227,6 +234,7 @@ def get_callable_handler_function(src, handler):
 
 def get_handler_filename(handler):
     """Shortcut to get the filename from the handler string.
+
     :param str handler:
       A dot delimited string representing the `<module>.<function name>`.
     """
@@ -236,8 +244,10 @@ def get_handler_filename(handler):
 
 def _install_packages(path, packages):
     """Install all packages listed to the target directory.
+
     Ignores any package that includes Python itself and python-lambda as well
     since its only needed for deploying and not running the code
+
     :param str path:
         Path to copy installed pip packages to.
     :param list packages:
@@ -258,6 +268,7 @@ def _install_packages(path, packages):
 def pip_install_to_target(path, requirements=False, local_package=None):
     """For a given active virtualenv, gather all installed pip packages then
     copy (re-install) them to the path provided.
+
     :param str path:
         Path to copy installed pip packages to.
     :param bool requirements:

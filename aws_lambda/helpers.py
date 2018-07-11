@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime as dt
 import os
-import re
 import zipfile
+import datetime as dt
 
 
 def mkdir(path):
@@ -10,9 +9,8 @@ def mkdir(path):
         os.makedirs(path)
 
 
-def read(path, loader=None, binary_file=False):
-    open_mode = 'rb' if binary_file else 'r'
-    with open(path, mode=open_mode) as fh:
+def read(path, loader=None):
+    with open(path) as fh:
         if not loader:
             return fh.read()
         return loader(fh.read())
@@ -32,12 +30,3 @@ def archive(src, dest, filename):
 def timestamp(fmt='%Y-%m-%d-%H%M%S'):
     now = dt.datetime.utcnow()
     return now.strftime(fmt)
-
-
-def get_environment_variable_value(val):
-    env_val = val
-    if val is not None and isinstance(val, str):
-        match = re.search(r'^\${(?P<environment_key_name>\w+)*}$', val)
-        if match is not None:
-            env_val = os.environ.get(match.group('environment_key_name'))
-    return env_val
