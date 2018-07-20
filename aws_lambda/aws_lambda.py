@@ -296,14 +296,15 @@ def pip_install_to_target(path, requirements=False, local_package=None):
         else:
             packages.extend(pip.operations.freeze.freeze())
     else:
-        if os.path.exists("requirements.txt"):
-            print('Gathering requirement packages')
-            data = read("requirements.txt")
-            packages.extend(data.splitlines())
-        elif os.path.exists(requirements):
+        if os.path.exists(requirements):
             print('Gathering requirement from %s' % requirements)
             data = read(requirements)
             packages.extend(data.splitlines())
+        elif os.path.exists("requirements.txt"):
+            print('Gathering requirement packages')
+            data = read("requirements.txt")
+            packages.extend(data.splitlines())
+        el
 
     if not packages:
         print('No dependency packages installed!')
