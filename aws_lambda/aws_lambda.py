@@ -304,7 +304,6 @@ def pip_install_to_target(path, requirements=False, local_package=None):
             print('Gathering requirement packages')
             data = read("requirements.txt")
             packages.extend(data.splitlines())
-        el
 
     if not packages:
         print('No dependency packages installed!')
