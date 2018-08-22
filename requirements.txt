@@ -1,5 +1,5 @@
-boto3==1.7.42
 botocore==1.10.42
+boto3==1.7.42
 click==6.6
 docutils==0.14
 futures==3.2.0
