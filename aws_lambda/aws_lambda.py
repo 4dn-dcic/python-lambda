@@ -11,6 +11,8 @@ from tempfile import mkdtemp
 import botocore
 import boto3
 import pip
+import subprocess
+import sys
 import yaml
 
 from .helpers import mkdir, read, archive, timestamp
@@ -264,10 +266,12 @@ def _install_packages(path, packages):
         print('Installing {package}'.format(package=package))
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
-            from pip._internal import main
-            main(['install', package, '-t', path, '--ignore-installed', '--progress-bar off'])
+            # use subprocess because pip internals should not be used above version 10
+            subproces.call([sys.executable, '-m', 'pip', 'install', package, '-t', path, '--ignore-installed'])
+            # from pip._internal import main
+            # main(['install', package, '-t', path, '--ignore-installed'])
         else:
-            pip.main(['install', package, '-t', path, '--ignore-installed', '--progress-bar off'])
+            pip.main(['install', package, '-t', path, '--ignore-installed'])
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):
