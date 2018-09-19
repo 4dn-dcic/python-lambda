@@ -265,9 +265,9 @@ def _install_packages(path, packages):
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             from pip._internal import main
-            main(['install', package, '-t', path, '--ignore-installed'])
+            main(['install', package, '-t', path, '--ignore-installed', '--progress-bar off'])
         else:
-            pip.main(['install', package, '-t', path, '--ignore-installed'])
+            pip.main(['install', package, '-t', path, '--ignore-installed', '--progress-bar off'])
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):
