@@ -7,9 +7,6 @@ from setuptools import setup, find_packages
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 pip_requirements = [r.strip() for r in requirements]
@@ -19,12 +16,12 @@ test_requirements = [
 ]
 
 setup(
-    name='python-lambda',
-    version='0.10.1',
+    name='python-lambda-4dn',
+    version='0.10.2',
     description="FORKED for 4dn-dcic. The bare minimum for a Python app running on Amazon Lambda.",
-    long_description=readme + '\n\n' + history,
-    author="Nick Ficano",
-    author_email='nficano@gmail.com',
+    long_description=readme,
+    author="Carl Vitzthum, Soo Lee",
+    author_email='carl_vitzthum@hms.harvard.edu',
     url='https://github.com/4dn-dcic/python-lambda',
     packages=find_packages(),
     package_data={
