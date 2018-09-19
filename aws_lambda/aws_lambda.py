@@ -262,16 +262,16 @@ def _install_packages(path, packages):
     for package in filtered_packages:
         if package.startswith('-e '):
             package = package.replace('-e ', '')
-
+        print('\n______ WORKING!\n')
         print('Installing {package}'.format(package=package))
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             # use subprocess because pip internals should not be used above version 10
-            subproces.call([sys.executable, '-m', 'pip', 'install', package, '-t', path, '--ignore-installed', '--progress-bar off'])
+            subproces.call([sys.executable, '-m', 'pip', 'install', package, '-t', path, '--ignore-installed', '--progress-bar off', '--no-cache-dir'])
             # from pip._internal import main
             # main(['install', package, '-t', path, '--ignore-installed'])
         else:
-            pip.main(['install', package, '-t', path, '--ignore-installed'])
+            pip.main(['install', package, '-t', path, '--ignore-installed', '--no-cache-dir'])
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):
