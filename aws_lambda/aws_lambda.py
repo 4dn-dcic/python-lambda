@@ -262,8 +262,7 @@ def _install_packages(path, packages):
     for package in filtered_packages:
         if package.startswith('-e '):
             package = package.replace('-e ', '')
-        print('\n______ WORKING!\n')
-        print('Installing {package}'.format(package=package))
+        print('\n______ INSTALLING: %s\n' % package)
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             # use subprocess because pip internals should not be used above version 10
