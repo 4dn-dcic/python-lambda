@@ -20,12 +20,12 @@ test_requirements = [
 
 setup(
     name='python-lambda',
-    version='0.7.1',
-    description="The bare minimum for a Python app running on Amazon Lambda.",
+    version='0.10.1',
+    description="FORKED for 4dn-dcic. The bare minimum for a Python app running on Amazon Lambda.",
     long_description=readme + '\n\n' + history,
     author="Nick Ficano",
     author_email='nficano@gmail.com',
-    url='https://github.com/nficano/python-lambda',
+    url='https://github.com/4dn-dcic/python-lambda',
     packages=find_packages(),
     package_data={
         'aws_lambda': ['project_templates/*'],
