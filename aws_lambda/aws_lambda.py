@@ -11,6 +11,8 @@ from tempfile import mkdtemp
 import botocore
 import boto3
 import pip
+import subprocess
+import sys
 import yaml
 
 from .helpers import mkdir, read, archive, timestamp
@@ -260,14 +262,15 @@ def _install_packages(path, packages):
     for package in filtered_packages:
         if package.startswith('-e '):
             package = package.replace('-e ', '')
-
-        print('Installing {package}'.format(package=package))
+        print('\n______ INSTALLING: %s\n' % package)
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
-            from pip._internal import main
-            main(['install', package, '-t', path, '--ignore-installed'])
+            # use subprocess because pip internals should not be used above version 10
+            subprocess.call([sys.executable, '-m', 'pip', 'install', package, '-t', path, '--ignore-installed', '--no-cache-dir'])
+            # from pip._internal import main
+            # main(['install', package, '-t', path, '--ignore-installed'])
         else:
-            pip.main(['install', package, '-t', path, '--ignore-installed'])
+            pip.main(['install', package, '-t', path, '--ignore-installed', '--no-cache-dir'])
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):

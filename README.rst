@@ -2,6 +2,7 @@
 python-λ
 ========
 
+
 .. image:: https://img.shields.io/pypi/v/python-lambda.svg
   :alt: Pypi
   :target: https://pypi.python.org/pypi/python-lambda/
@@ -11,6 +12,11 @@ python-λ
   :target: https://pypi.python.org/pypi/python-lambda/
 
 Python-lambda is a toolset for developing and deploying *serverless* Python code in AWS Lambda.
+
+Important
+=======================
+This is a FORK of the original Python-lambda package by Nick Ficano.
+It will NOT be updated regularly and is frozen per our projects needs.
 
 A call for contributors
 =======================

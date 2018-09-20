@@ -2,41 +2,27 @@
 # -*- coding: utf-8 -*-
 import sys
 
-try: # for pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError: # for pip <= 9.0.3
-    from pip.req import parse_requirements
-
-try: # for pip >= 10
-    from pip._internal import download
-except ImportError: # for pip <= 9.0.3
-    from pip import download
-
 from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
-requirements = parse_requirements(
-    'requirements.txt', session=download.PipSession(),
-)
-pip_requirements = [str(r.req) for r in requirements]
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+pip_requirements = [r.strip() for r in requirements]
 
 test_requirements = [
     # TODO: put package test requirements here
 ]
 
 setup(
-    name='python-lambda',
-    version='0.7.1',
-    description="The bare minimum for a Python app running on Amazon Lambda.",
-    long_description=readme + '\n\n' + history,
-    author="Nick Ficano",
-    author_email='nficano@gmail.com',
-    url='https://github.com/nficano/python-lambda',
+    name='python-lambda-4dn',
+    version='0.10.2',
+    description="FORKED for 4dn-dcic. The bare minimum for a Python app running on Amazon Lambda.",
+    long_description=readme,
+    author="Carl Vitzthum, Soo Lee",
+    author_email='carl_vitzthum@hms.harvard.edu',
+    url='https://github.com/4dn-dcic/python-lambda',
     packages=find_packages(),
     package_data={
         'aws_lambda': ['project_templates/*'],
