@@ -11,13 +11,15 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 pip_requirements = [r.strip() for r in requirements]
 
+pkg_version = open("aws_lambda/_version.py").readlines()[-1].split()[-1].strip("\"'")
+
 test_requirements = [
     # TODO: put package test requirements here
 ]
 
 setup(
     name='python-lambda-4dn',
-    version='0.10.2',
+    version=pkg_version,
     description="FORKED for 4dn-dcic. The bare minimum for a Python app running on Amazon Lambda.",
     long_description=readme,
     author="Carl Vitzthum, Soo Lee",

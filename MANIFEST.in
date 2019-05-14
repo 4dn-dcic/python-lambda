@@ -1,6 +1,7 @@
 include HISTORY.rst
 include LICENSE
 include README.rst
+include requirements.txt
 include python/boto/endpoints.json
 include aws_lambda/project_template/config.yaml
 recursive-include tests *.json *.py *.txt *.yaml
