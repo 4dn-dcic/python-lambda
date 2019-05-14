@@ -34,7 +34,6 @@ The *Python-Lambda* library takes away the guess work of developing your Python-
 Requirements
 ============
 
-* Python 2.7 (At the time of writing this, AWS Lambda only supports Python 2.7).
 * Pip (~8.1.1)
 * Virtualenv (~15.0.0)
 * Virtualenvwrapper (~4.7.1)
