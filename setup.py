@@ -11,6 +11,10 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 pip_requirements = [r.strip() for r in requirements]
 
+# Only install futures package if using a Python version <= 2.7
+if sys.version_info < (3, 0):
+    pip_requirements.append('futures==3.0.5')
+
 pkg_version = open("aws_lambda/_version.py").readlines()[-1].split()[-1].strip("\"'")
 
 test_requirements = [
