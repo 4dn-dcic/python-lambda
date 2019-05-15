@@ -9,8 +9,9 @@ def mkdir(path):
         os.makedirs(path)
 
 
-def read(path, loader=None):
-    with open(path) as fh:
+def read(path, loader=None, binary_file=False):
+    open_mode = 'rb' if binary_file else 'r'
+    with open(path, mode=open_mode) as fh:
         if not loader:
             return fh.read()
         return loader(fh.read())
