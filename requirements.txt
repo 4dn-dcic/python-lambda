@@ -3,7 +3,5 @@ boto3==1.7.42
 click==6.6
 docutils==0.14
 jmespath==0.9.4
-pyaml==15.8.2
 python-dateutil==2.8.0
-PyYAML==3.12
 six==1.12.0

@@ -23,6 +23,7 @@ def archive(src, dest, filename):
 
     for root, _, files in os.walk(src):
         for file in files:
+            print('ROOT --> %s\nFILE --> %s\n' % (root, file))
             zfh.write(os.path.join(root, file))
     zfh.close()
     return os.path.join(dest, filename)
