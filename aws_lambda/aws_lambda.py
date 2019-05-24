@@ -237,6 +237,8 @@ def update_function(cfg, path_to_zip_file, envs=None):
     }
     if envs and isinstance(envs, dict):
         lambda_update_config['Environment'] = {'Variables': envs}
+    if cfg.get('runtime'):
+        lambda_update_config['Runtime'] = cfg['runtime']
 
     client.update_function_configuration(**lambda_update_config)
 
