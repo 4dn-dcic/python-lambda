@@ -22,7 +22,8 @@ log = logging.getLogger(__name__)
 
 
 
-def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None, envs=None, dev=False):
+def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None,
+                   extra_config=None, local_pkg=None):
     cfg = fxn_module.config
     fxn_fpath = fxn_module.__file__
     try:
@@ -45,8 +46,6 @@ def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None, envs
             # copy service file
             copyfile(fxn_fpath, os.path.join(tmp_dir, function_filename))
             # install packages from requirements or pip freeze if not specified
-            # if in dev mode, install whatever package is in the cwd
-            local_pkg = '.' if dev else None
             pip_install_to_target(tmp_dir, requirements=requirements_fpath, local_package=local_pkg)
             # zip the files in temporary directory
             with zipfile.ZipFile(tmp_zip, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -58,9 +57,9 @@ def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None, envs
                         archive.write(os.path.join(root, file), arcname=arcname)
         # create or update the function
         if function_exists(cfg, function_name):
-            update_function(cfg, tmp_zip.name, envs)
+            update_function(cfg, tmp_zip.name, extra_config)
         else:
-            create_function(cfg, tmp_zip.name, envs)
+            create_function(cfg, tmp_zip.name, extra_config)
 
 
 def _install_packages(path, packages):
@@ -158,7 +157,7 @@ def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
     )
 
 
-def create_function(cfg, path_to_zip_file, envs=None):
+def create_function(cfg, path_to_zip_file, extra_config=None):
     """Register and upload a function to AWS Lambda."""
 
     print("Creating your new Lambda function")
@@ -176,34 +175,32 @@ def create_function(cfg, path_to_zip_file, envs=None):
         os.environ.get('LAMBDA_FUNCTION_NAME') or cfg.get('function_name')
     )
 
-    # use provided environment vars or python-lambda style vars
-    if envs and isinstance(envs, dict):
-        environment_vars = {'Variables': envs}
-    else:
-        environment_vars = {
+    lambda_create_config = {
+        'FunctionName': func_name,
+        'Runtime': cfg.get('runtime', 'python2.7'),
+        'Role': role,
+        'Handler': cfg.get('handler'),
+        'Code': {'ZipFile': byte_stream},
+        'Description': cfg.get('description'),
+        'Timeout': cfg.get('timeout', 15),
+        'MemorySize': cfg.get('memory_size', 512),
+        'Environment': {
             'Variables': {
                 key.strip('LAMBDA_'): value
                 for key, value in os.environ.items()
                 if key.startswith('LAMBDA_')
             }
-        }
+        },
+        'Publish': True
+    }
+    if extra_config and isinstance(extra_config, dict):
+        lambda_create_config.update(extra_config)
 
     print('Creating lambda function with name: {}'.format(func_name))
-    client.create_function(
-        FunctionName=func_name,
-        Runtime=cfg.get('runtime', 'python2.7'),
-        Role=role,
-        Handler=cfg.get('handler'),
-        Code={'ZipFile': byte_stream},
-        Description=cfg.get('description'),
-        Timeout=cfg.get('timeout', 15),
-        MemorySize=cfg.get('memory_size', 512),
-        Environment=environment_vars,
-        Publish=True
-    )
+    client.create_function(**lambda_create_config)
 
 
-def update_function(cfg, path_to_zip_file, envs=None):
+def update_function(cfg, path_to_zip_file, extra_config=None):
     """Updates the code of an existing Lambda function"""
 
     print("Updating your Lambda function")
@@ -235,10 +232,8 @@ def update_function(cfg, path_to_zip_file, envs=None):
             'SecurityGroupIds': cfg.get('security_group_ids', [])
         }
     }
-    if envs and isinstance(envs, dict):
-        lambda_update_config['Environment'] = {'Variables': envs}
-    if cfg.get('runtime'):
-        lambda_update_config['Runtime'] = cfg['runtime']
+    if extra_config and isinstance(extra_config, dict):
+        lambda_update_config.update(extra_config)
 
     client.update_function_configuration(**lambda_update_config)
 
