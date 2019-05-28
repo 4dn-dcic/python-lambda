@@ -1,60 +1,78 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import json
 import logging
 import os
-import time
 import tempfile
 import zipfile
-from imp import load_source
-from shutil import copy, copyfile
-
-import botocore
+from shutil import copyfile, copytree
 import boto3
 import pip
 import subprocess
 import sys
 
-from .helpers import mkdir, read, archive, timestamp
-
 
 log = logging.getLogger(__name__)
 
 
+def read_file(path, loader=None, binary_file=False):
+    open_mode = 'rb' if binary_file else 'r'
+    with open(path, mode=open_mode) as fh:
+        if not loader:
+            return fh.read()
+        return loader(fh.read())
 
-def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None,
-                   extra_config=None, local_pkg=None):
-    cfg = fxn_module.config
-    fxn_fpath = fxn_module.__file__
+
+def deploy_function(function_module, function_name_suffix='', package_objects=None,
+                    requirements_fpath=None, extra_config=None, local_package=None):
+    # check provided function module and packages
+    cfg = function_module.config
+    function_fpath = function_module.__file__
     try:
         function_name = cfg.get('function_name')
     except KeyError:
         raise KeyError('Must specify "function_name" for deployment of %s'
-                        % fxn_fpath)
-    if fxn_name_suffix:
-        if not fxn_name_suffix.startswith('_'):
-            fxn_name_suffix = '_' + fxn_name_suffix
-        function_name += fxn_name_suffix
+                        % function_fpath)
+    if package_objects is not None and not isinstance(package_objects, list):
+        raise TypeError('If provided, "package_objects" must be a list. Found %s'
+                        % package_objects)
+    if function_name_suffix:
+        if not function_name_suffix.startswith('_'):
+            function_name_suffix = '_' + function_name_suffix
+        function_name += function_name_suffix
         cfg['function_name'] = function_name
     function_module = cfg.get('function_module', 'service')
     function_handler = cfg.get('function_handler', 'handler')
     function_filename = '.'.join([function_module, 'py'])
     if not cfg.get('handler'):
         cfg['handler'] = '.'.join([function_module, function_handler])
+
+    # create a temporary file (zipfile) and temporary dir (items to zip)
     with tempfile.NamedTemporaryFile(suffix='.zip') as tmp_zip:
         with tempfile.TemporaryDirectory() as tmp_dir:
             # copy service file
-            copyfile(fxn_fpath, os.path.join(tmp_dir, function_filename))
-            # install packages from requirements or pip freeze if not specified
-            pip_install_to_target(tmp_dir, requirements=requirements_fpath, local_package=local_pkg)
+            copyfile(function_fpath, os.path.join(tmp_dir, function_filename))
+
+            # copy other directly provided python packages
+            for package_obj in package_objects:
+                package_name = package_obj.__package__
+                package_path = package_obj.__path__[0]
+                dest_path = os.path.join(tmp_dir, package_name)
+                copytree(package_path, dest_path)
+
+            # install packages from requirements file or `pip freeze` output if
+            # file not specified. `local_package` can be used to pip install
+            # something from local filesystem
+            pip_install_to_target(tmp_dir, requirements=requirements_fpath,
+                                  local_package=local_package)
+
             # zip the files in temporary directory
             with zipfile.ZipFile(tmp_zip, 'w', zipfile.ZIP_DEFLATED) as archive:
                 for root, _, files in os.walk(tmp_dir):
                     for file in files:
                         # format the filepaths in the archive
                         arcname = os.path.join(root.replace(tmp_dir, ''), file)
-                        print('ROOT --> %s\nFILE --> %s\nARCNAME--> %s\n' % (root, file, arcname))
                         archive.write(os.path.join(root, file), arcname=arcname)
+
         # create or update the function
         if function_exists(cfg, function_name):
             update_function(cfg, tmp_zip.name, extra_config)
@@ -63,15 +81,18 @@ def deploy_tibanna(fxn_module, fxn_name_suffix='', requirements_fpath=None,
 
 
 def _install_packages(path, packages):
-    """Install all packages listed to the target directory.
+    """
+    Install all packages listed to the target directory.
 
     Ignores any package that includes Python itself and python-lambda as well
     since its only needed for deploying and not running the code
 
-    :param str path:
-        Path to copy installed pip packages to.
-    :param list packages:
-        A list of packages to be installed via pip.
+    Args:
+        path (str): Path to copy installed pip packages to.
+        packages (list): A list of packages to be installed via pip
+
+    Returns:
+        None
     """
     def _filter_blacklist(package):
         blacklist = ["-i", "#", "Python==", "python-lambda==", "python-lambda-4dn=="]
@@ -80,7 +101,7 @@ def _install_packages(path, packages):
     for package in filtered_packages:
         if package.startswith('-e '):
             package = package.replace('-e ', '')
-        print('\n______ INSTALLING: %s\n' % package)
+        log.info('\n______ INSTALLING: %s\n' % package)
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             # use subprocess because pip internals should not be used above version 10
@@ -92,24 +113,29 @@ def _install_packages(path, packages):
 
 
 def pip_install_to_target(path, requirements=False, local_package=None):
-    """For a given active virtualenv, gather all installed pip packages then
+    """
+    For a given active virtualenv, gather all installed pip packages then
     copy (re-install) them to the path provided.
 
-    :param str path:
-        Path to copy installed pip packages to.
-    :param bool requirements:
-        If set, only the packages in the requirements.txt file are installed.
-        The requirements.txt file needs to be in the same directory as the
-        project which shall be deployed.
-        Defaults to false and installs all pacakges found via pip freeze if
-        not set.
-    :param str local_package:
-        The path to a local package with should be included in the deploy as
-        well (and/or is not available on PyPi)
+    Args:
+        path (str): Path to copy installed pip packages to.
+        requirements (bool):
+            If set, only the packages in the requirements.txt
+            file are installed.
+            The requirements.txt file needs to be in the same directory as the
+            project which shall be deployed.
+            Defaults to false and installs all pacakges found via pip freeze if
+            not set.
+        local_package (str):
+            The path to a local package with should be included in the deploy as
+            well (and/or is not available on PyPi)
+
+    Returns:
+        None
     """
     packages = []
     if not requirements:
-        print('Gathering pip packages')
+        log.info('Gathering pip packages')
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             from pip._internal import operations
@@ -118,16 +144,16 @@ def pip_install_to_target(path, requirements=False, local_package=None):
             packages.extend(pip.operations.freeze.freeze())
     else:
         if os.path.exists(requirements):
-            print('Gathering requirement from %s' % requirements)
-            data = read(requirements)
+            log.info('Gathering requirement from %s' % requirements)
+            data = read_file(requirements)
             packages.extend(data.splitlines())
         elif os.path.exists("requirements.txt"):
-            print('Gathering requirement packages')
-            data = read("requirements.txt")
+            log.info('Gathering requirement packages')
+            data = read_file("requirements.txt")
             packages.extend(data.splitlines())
 
     if not packages:
-        print('No dependency packages installed!')
+        log.info('No dependency packages installed!')
 
     if local_package is not None:
         # TODO: actually sdist is probably bettter here...
@@ -160,8 +186,7 @@ def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
 def create_function(cfg, path_to_zip_file, extra_config=None):
     """Register and upload a function to AWS Lambda."""
 
-    print("Creating your new Lambda function")
-    byte_stream = read(path_to_zip_file, binary_file=True)
+    byte_stream = read_file(path_to_zip_file, binary_file=True)
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
 
@@ -196,15 +221,14 @@ def create_function(cfg, path_to_zip_file, extra_config=None):
     if extra_config and isinstance(extra_config, dict):
         lambda_create_config.update(extra_config)
 
-    print('Creating lambda function with name: {}'.format(func_name))
+    log.info('Creating lambda function with name: {}'.format(func_name))
     client.create_function(**lambda_create_config)
 
 
 def update_function(cfg, path_to_zip_file, extra_config=None):
     """Updates the code of an existing Lambda function"""
 
-    print("Updating your Lambda function")
-    byte_stream = read(path_to_zip_file, binary_file=True)
+    byte_stream = read_file(path_to_zip_file, binary_file=True)
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
 
@@ -214,6 +238,7 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
     client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
                         cfg.get('region'))
 
+    log.info('Updating lambda function with name: {}'.format(cfg.get('function_name')))
     client.update_function_code(
         FunctionName=cfg.get('function_name'),
         ZipFile=byte_stream,

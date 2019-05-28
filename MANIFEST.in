@@ -3,8 +3,7 @@ include LICENSE
 include README.rst
 include requirements.txt
 include python/boto/endpoints.json
-include aws_lambda/project_template/config.yaml
-recursive-include tests *.json *.py *.txt *.yaml
+]recursive-include tests *.json *.py *.txt *.yaml
 recursive-include templates *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

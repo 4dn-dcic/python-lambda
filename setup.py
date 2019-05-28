@@ -24,7 +24,7 @@ test_requirements = [
 setup(
     name='python-lambda-4dn',
     version=pkg_version,
-    description="FORKED for 4dn-dcic. The bare minimum for a Python app running on Amazon Lambda.",
+    description="FORKED for 4dn-dcic. Use to package and deploy lambda functions.",
     long_description=readme,
     author="Carl Vitzthum, Soo Lee",
     author_email='carl_vitzthum@hms.harvard.edu',
