@@ -12,6 +12,7 @@ import sys
 
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 def read_file(path, loader=None, binary_file=False):
@@ -101,7 +102,7 @@ def _install_packages(path, packages):
     for package in filtered_packages:
         if package.startswith('-e '):
             package = package.replace('-e ', '')
-        log.info('\n______ INSTALLING: %s\n' % package)
+        log.info('______ INSTALLING: %s' % package)
         pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
         if pip_major_version >= 10:
             # use subprocess because pip internals should not be used above version 10
@@ -252,6 +253,7 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
         'Description': cfg.get('description'),
         'Timeout': cfg.get('timeout', 15),
         'MemorySize': cfg.get('memory_size', 512),
+        'Runtime': cfg.get('runtime', 'python2.7'),
         'VpcConfig': {
             'SubnetIds': cfg.get('subnet_ids', []),
             'SecurityGroupIds': cfg.get('security_group_ids', [])

@@ -30,12 +30,7 @@ setup(
     author_email='carl_vitzthum@hms.harvard.edu',
     url='https://github.com/4dn-dcic/python-lambda',
     packages=find_packages(),
-    package_data={
-        'aws_lambda': ['project_templates/*'],
-        '': ['*.json'],
-    },
     include_package_data=True,
-    scripts=['scripts/lambda'],
     install_requires=pip_requirements,
     license="ISCL",
     zip_safe=False,
