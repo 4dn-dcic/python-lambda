@@ -203,7 +203,7 @@ def create_function(cfg, path_to_zip_file, extra_config=None):
 
     lambda_create_config = {
         'FunctionName': func_name,
-        'Runtime': cfg.get('runtime', 'python2.7'),
+        'Runtime': cfg.get('runtime', 'python3.6'),
         'Role': role,
         'Handler': cfg.get('handler'),
         'Code': {'ZipFile': byte_stream},
@@ -253,7 +253,7 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
         'Description': cfg.get('description'),
         'Timeout': cfg.get('timeout', 15),
         'MemorySize': cfg.get('memory_size', 512),
-        'Runtime': cfg.get('runtime', 'python2.7'),
+        'Runtime': cfg.get('runtime', 'python3.6'),
         'VpcConfig': {
             'SubnetIds': cfg.get('subnet_ids', []),
             'SecurityGroupIds': cfg.get('security_group_ids', [])
