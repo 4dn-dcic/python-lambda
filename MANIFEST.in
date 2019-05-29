@@ -3,7 +3,7 @@ include LICENSE
 include README.rst
 include requirements.txt
 include python/boto/endpoints.json
-]recursive-include tests *.json *.py *.txt *.yaml
+recursive-include tests *.json *.py *.txt *.yaml
 recursive-include templates *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

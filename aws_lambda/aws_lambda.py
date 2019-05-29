@@ -12,7 +12,6 @@ import sys
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 def read_file(path, loader=None, binary_file=False):
@@ -25,6 +24,39 @@ def read_file(path, loader=None, binary_file=False):
 
 def deploy_function(function_module, function_name_suffix='', package_objects=None,
                     requirements_fpath=None, extra_config=None, local_package=None):
+    """
+    Creates or updates a lambda function given a `function_module` that is a
+    python module containing a dictionary config and correct handler function.
+    The name of the handler function must match the `function_handler` value
+    in the config.
+
+    Overall, this function creates a temporary directory and installs the lambda
+    service function, as well as supplied python modules and pip packages. This
+    directory is compressed as a temporary zip file and used to create/update
+    the lambda function.
+
+    Args:
+        function_module (types.ModuleType):
+            Python module containing the `config` dictionary and handler
+            function necessary to deploy the lambda function. See an examples
+            in aws_lambda.examples.
+        function_name_suffix (str):
+            If provided, will append the given string (with prepended "_" if
+            not present) to the deployed lambda function name.
+        package_objects (list):
+            Optional list of Python packages (types.ModuleType) that will be
+            explicitly added to the zipfile for lambda code. Use this argument
+            as an alternative to pip installing packages.
+        requirements_fpath (str): path to requirements.txt file to pip install.
+        extra_config (dict):
+            additional kwargs that will be passed to boto3 create_function
+            or update_function_configuration for lambda client. Optionally use
+            to override `Environment` or any other arguments.
+        local_package (str): optional path to a Python repo to pip install.
+
+    Returns:
+        None
+    """
     # check provided function module and packages
     cfg = function_module.config
     function_fpath = function_module.__file__
