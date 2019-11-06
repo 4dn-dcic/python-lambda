@@ -1,9 +1,12 @@
-import time
 from conftest import *
 from tests.test_lambdas import (
     example_function,
-    example_function_update
+    example_function_update,
+    function_with_requirements,
+    function_with_package,
+    function_with_req_pack
 )
+from tests import package
 
 
 @pytest.fixture
@@ -72,8 +75,8 @@ class TestPythonLambdaIntegration():
         Updates that same function with different config, invokes to verify the
         update went through
         """
-        full_name = 'my_test_function_integration_test'
         suff = 'integration_test'
+        full_name = example_function.config['function_name'] + '_' + suff
         deploy_function(example_function, function_name_suffix=suff)
         assert function_exists(cfg, full_name)
         resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
@@ -85,6 +88,41 @@ class TestPythonLambdaIntegration():
 
     def test_deploy_lambda_with_requirements(self, cfg, lambda_client):
         """
-        Deploys and invokes a lambda that has requirements
+        Deploys and invokes a lambda that has requirements, this time with no suffix
+        Also passes an argument that is checked
         """
-        pass
+        import json
+        full_name = function_with_requirements.config['function_name']
+        req_fpath = './tests/test_lambdas/requirements.txt'
+        deploy_function(function_with_requirements, requirements_fpath=req_fpath)
+        assert function_exists(cfg, full_name)
+        resp = lambda_client.invoke(FunctionName=full_name,
+                                    InvocationType='RequestResponse',
+                                    Payload=json.dumps({'magic': 17}))
+        assert resp['Payload'].read().decode('utf-8') == '"I successfully imported pytest! Magic: 17"'
+        assert delete_function(cfg, full_name)
+
+    def test_deploy_lambda_with_package(self, cfg, lambda_client):
+        """
+        Deploys and invokes a lambda that has package based dependencies
+        """
+        full_name = function_with_package.config['function_name']
+        deploy_function(function_with_package, package_objects=[package])
+        assert function_exists(cfg, full_name)
+        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
+        assert resp['Payload'].read().decode('utf-8') == '"I successfully called magic_function: 21"'
+        assert delete_function(cfg, full_name)
+
+    def test_deploy_lambda_with_package_and_requirements(self, cfg, lambda_client):
+        """
+        Deploys and invokes a lambda that uses both an independently packaged
+        dependency and one given from requirements.
+        """
+        full_name = function_with_req_pack.config['function_name']
+        req_fpath = './tests/test_lambdas/requirements.txt'
+        deploy_function(function_with_req_pack, requirements_fpath=req_fpath,
+                        package_objects=[package])
+        assert function_exists(cfg, full_name)
+        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
+        assert resp['Payload'].read().decode('utf-8') == '"Imported pytest, magic_function: 21"'
+        assert delete_function(cfg, full_name)
