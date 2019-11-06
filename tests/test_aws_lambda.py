@@ -25,6 +25,7 @@ def cfg(aws_keys):
     conf = {}
     conf['aws_access_key_id'] = key_id
     conf['aws_secret_access_key'] = secret
+    conf['region'] = 'us-east-1'
     return conf
 
 
