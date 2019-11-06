@@ -78,6 +78,8 @@ def deploy_function(function_module, function_name_suffix='', package_objects=No
     function_filename = '.'.join([function_module, 'py'])
     if not cfg.get('handler'):
         cfg['handler'] = '.'.join([function_module, function_handler])
+    if not package_objects:
+        package_objects = [] # don't crash trying to iterate on None below
 
     # create a temporary file (zipfile) and temporary dir (items to zip)
     with tempfile.NamedTemporaryFile(suffix='.zip') as tmp_zip:
@@ -167,29 +169,16 @@ def pip_install_to_target(path, requirements=False, local_package=None):
         None
     """
     packages = []
-    if not requirements:
-        log.info('Gathering pip packages')
-        pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
-        if pip_major_version >= 10:
-            from pip._internal import operations
-            packages.extend(operations.freeze.freeze())
-        else:
-            packages.extend(pip.operations.freeze.freeze())
-    else:
+    if requirements:
         if os.path.exists(requirements):
             log.info('Gathering requirement from %s' % requirements)
             data = read_file(requirements)
-            packages.extend(data.splitlines())
-        elif os.path.exists("requirements.txt"):
-            log.info('Gathering requirement packages')
-            data = read_file("requirements.txt")
             packages.extend(data.splitlines())
 
     if not packages:
         log.info('No dependency packages installed!')
 
     if local_package is not None:
-        # TODO: actually sdist is probably bettter here...
         packages.append(local_package)
     _install_packages(path, packages)
 
@@ -306,6 +295,25 @@ def function_exists(cfg, function_name):
                         cfg.get('region'))
     try:
         client.get_function(FunctionName=function_name)
+    except:
+        return False
+    return True
+
+
+def delete_function(cfg, function_name):
+    """
+    Deletes the given function name from AWS Lambda. First checks that it exists.
+    PRE: 'client' is a boto3 lambda client
+    Returns True in success, False otherwise
+    """
+
+    aws_access_key_id = cfg.get('aws_access_key_id')
+    aws_secret_access_key = cfg.get('aws_secret_access_key')
+    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
+                        cfg.get('region'))
+    try:
+        client.get_function(FunctionName=function_name)
+        client.delete_function(FunctionName=function_name)
     except:
         return False
     return True

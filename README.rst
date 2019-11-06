@@ -18,10 +18,6 @@ Important
 This is a FORK of the original Python-lambda package by Nick Ficano.
 It will NOT be updated regularly and is frozen per our projects needs.
 
-A call for contributors
-=======================
-With python-lambda and `pytube <https://github.com/nficano/pytube/>`_ both continuing to gain momentum, I'm calling for contributors to help build out new features, review pull requests, fix bugs, and maintain overall code quality. If you're interested, please email me at nficano[at]gmail.com.
-
 Description
 ===========
 

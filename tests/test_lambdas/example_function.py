@@ -22,8 +22,8 @@ config = {
     'handler': 'service.handler',
     'region': 'us-east-1',
     'runtime': 'python3.6',
-    'role': 'my_iam_role',
-    'description': 'Some description for my test lambda'
+    'role': 'helloworld',
+    'description': 'Test lambda'
 }
 
 
