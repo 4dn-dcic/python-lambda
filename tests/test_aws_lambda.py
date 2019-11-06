@@ -31,7 +31,7 @@ def cfg(aws_keys):
 @pytest.fixture
 def lambda_client(aws_keys):
     key_id, secret = aws_keys
-    return get_client('lambda', key_id, secret)
+    return get_client('lambda', key_id, secret, region='us-east-1')
 
 
 class TestPythonLambdaUnit():
