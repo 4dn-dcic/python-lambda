@@ -40,6 +40,11 @@ class TestPythonLambdaUnit():
 
     pytestmark = [pytest.mark.unit]
 
+    def test_get_version(self):
+        """ Because coverage, thats why! """
+        from aws_lambda._version import __version__
+        assert len(__version__.split('.')) == 3 # should be x.x.x
+
     def test_get_role_name(self):
         """ Basic test that validates our role_name format """
         _id, role = 'abcdefg', 'ADMIN'
@@ -86,6 +91,7 @@ class TestPythonLambdaIntegration():
         resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
         assert resp['Payload'].read().decode('utf-8') == '"Hello! I have been updated! My input event is {}"'
         assert delete_function(cfg, full_name)
+        assert not delete_function(cfg, full_name)
 
     def test_deploy_lambda_with_requirements(self, cfg, lambda_client):
         """

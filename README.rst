@@ -34,125 +34,55 @@ The *Python-Lambda* library takes away the guess work of developing your Python-
 Requirements
 ============
 
-* Python 2.7 & 3.6 (At the time of writing this, AWS Lambda only supports Python 2.7/3.6).
-* Pip (~8.1.1)
-* Virtualenv (~15.0.0)
-* Virtualenvwrapper (~4.7.1)
+* Python 3.6
+* Pip (Any should work)
+* Virtualenv (>=15.0.0)
+* Virtualenvwrapper (>=4.7.1)
 
 Getting Started
 ===============
 
-First, you must create an IAM Role on your AWS account called `lambda_basic_execution` with the `LambdaBasicExecution` policy attached.
-
-On your computer, create a new virtualenv and project folder.
-
-.. code:: bash
-
-    $ mkvirtualenv pylambda
-    (pylambda) $ mkdir pylambda
-
-Next, download *Python-Lambda* using pip via pypi.
-
-.. code:: bash
-
-    (pylambda) $ pip install python-lambda
-
-From your ``pylambda`` directory, run the following to bootstrap your project.
-
-.. code:: bash
-
-    (pylambda) $ lambda init
-
-This will create the following files: ``event.json``, ``__init__.py``, ``service.py``, and ``config.yaml``.
-
-Let's begin by opening ``config.yaml`` in the text editor of your choice. For the purpose of this tutorial, the only required information is ``aws_access_key_id`` and ``aws_secret_access_key``. You can find these by logging into the AWS management console.
-
-Next let's open ``service.py``, in here you'll find the following function:
+Using this library is intended to be as straightforward as possible. We  Code for a very simple lambda used in the tests is reproduced below.
 
 .. code:: python
 
-    def handler(event, context):
-        # Your code goes here!
-        e = event.get('e')
-        pi = event.get('pi')
-        return e + pi
+  config = {
+      'function_name': 'my_test_function',
+      'function_module': 'service',
+      'function_handler': 'handler',
+      'handler': 'service.handler',
+      'region': 'us-east-1',
+      'runtime': 'python3.6',
+      'role': 'helloworld',
+      'description': 'Test lambda'
+  }
 
 
-This is the handler function; this is the function AWS Lambda will invoke in response to an event. You will notice that in the sample code ``e`` and ``pi`` are values in a ``dict``. AWS Lambda uses the ``event`` parameter to pass in event data to the handler.
+  def handler(event, context):
+      return 'Hello! My input event is %s' % event
 
-So if, for example, your function is responding to an http request, ``event`` will be the ``POST`` JSON data and if your function returns something, the contents will be in your http response payload.
+This code illustrates the two things required to create a lambda. The first is ``config``, which specifies metadata for AWS. One important thing to note in here is the ``role`` field. This must be a IAM role with Lambda permissions - the one in this example is ours. The second is the ``handler`` function. This is the actual code that is executed.
 
-Next let's open the ``event.json`` file:
-
-.. code:: json
-
-    {
-      "pi": 3.14,
-      "e": 2.718
-    }
-
-Here you'll find the values of ``e`` and ``pi`` that are being referenced in the sample code.
-
-If you now try and run:
-
-.. code:: bash
-
-    (pylambda) $ lambda invoke -v
-
-You will get:
-
-.. code:: bash
-
-    # 5.858
-
-    # execution time: 0.00000310s
-    # function execution timeout: 15s
-
-As you probably put together, the ``lambda invoke`` command grabs the values stored in the ``event.json`` file and passes them to your function.
-
-The ``event.json`` file should help you develop your Lambda service locally. You can specify an alternate ``event.json`` file by passing the ``--event-file=<filename>.json`` argument to ``lambda invoke``.
-
-When you're ready to deploy your code to Lambda simply run:
-
-.. code:: bash
-
-    (pylambda) $ lambda deploy
-
-The deploy script will evaluate your virtualenv and identify your project dependencies. It will package these up along with your handler function to a zip file that it then uploads to AWS Lambda.
-
-You can now log into the `AWS Lambda management console <https://console.aws.amazon.com/lambda/>`_ to verify the code deployed successfully.
-
-Wiring to an API endpoint
-=========================
-
-If you're looking to develop a simple microservice you can easily wire your function up to an http endpoint.
-
-Begin by navigating to your `AWS Lambda management console <https://console.aws.amazon.com/lambda/>`_ and clicking on your function. Click the API Endpoints tab and click "Add API endpoint".
-
-Under API endpoint type select "API Gateway".
-
-Next change Method to ``POST`` and Security to "Open" and click submit (NOTE: you should secure this for use in production, open security is used for demo purposes).
-
-At last you need to change the return value of the function to comply with the standard defined for the API Gateway endpoint, the function should now look like this:
+Given this code in ``example_function.py`` you would deploy this function like so:
 
 .. code:: python
 
-    def handler(event, context):
-        # Your code goes here!
-        e = event.get('e')
-        pi = event.get('pi')
-        return {
-            "statusCode": 200,
-            "headers": { "Content-Type": "application/json"},
-            "body": e + pi
-        }
+  from aws_lambda import deploy_function
+  import example_function
+  deploy_function(example_function,
+                  function_name_suffix='<suffix>',
+                  package_objects=['list', 'of', 'local', 'modules'],
+                  requirements_fpath='path/to/requirements',
+                  extra_config={'optional_arguments_for': 'boto3'})
 
-Now try and run:
+And that's it! You've deployed a simple lambda function. You can navigate to the AWS console to create a test event to trigger it or you can invoke it directly using Boto3.
 
-.. code:: bash
+Advanced Usage
+==============
 
-    $ curl --header "Content-Type:application/json" \
-           --request POST \
-           --data '{"pi": 3.14, "e": 2.718}' \
-           https://<API endpoint URL>
-    # 5.8580000000000005
+Many of the options specified in the above code block when it came to actually deploying the function are not used. These become more useful as you want to make more complicated lambda functions. The ideal way to incorporate dependencies into lambda functions is by providing a ``requirements.txt`` file. We rely on ``pip`` to install these packages and have found it to be very reliable. While it is also possible to specify local modules as well through ``package_objects``, doing so is not recommended because those modules must be specified at the top level of the repository in order to work out of the box. There is a comment on this topic in ``example_function_package.py`` with code on how to handle it.
+
+The Code
+========
+
+Write some stuff about the code generally.
