@@ -7,13 +7,13 @@ python-λ
   :alt: Pypi
   :target: https://pypi.python.org/pypi/python-lambda/
 
-.. image:: https://img.shields.io/pypi/pyversions/python-lambda.svg
-  :alt: Python Versions
-  :target: https://pypi.python.org/pypi/python-lambda/
-
 .. image:: https://travis-ci.org/4dn-dcic/python-lambda.svg?branch=master
   :alt: Build Status
   :target: https://travis-ci.org/4dn-dcic/python-lambda
+
+.. image:: https://coveralls.io/repos/github/4dn-dcic/python-lambda/badge.svg?branch=master
+  :alt: Coverage
+  :target: https://coveralls.io/github/4dn-dcic/python-lambda?branch=master
 
 Python-lambda is a toolset for developing and deploying *serverless* Python code in AWS Lambda.
 
