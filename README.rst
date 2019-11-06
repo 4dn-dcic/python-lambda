@@ -82,7 +82,7 @@ Advanced Usage
 
 Many of the options specified in the above code block when it came to actually deploying the function are not used. These become more useful as you want to make more complicated lambda functions. The ideal way to incorporate dependencies into lambda functions is by providing a ``requirements.txt`` file. We rely on ``pip`` to install these packages and have found it to be very reliable. While it is also possible to specify local modules as well through ``package_objects``, doing so is not recommended because those modules must be specified at the top level of the repository in order to work out of the box. There is a comment on this topic in ``example_function_package.py`` with code on how to handle it.
 
-The Code
+Tests
 ========
 
-Write some stuff about the code generally.
+Tests can be found in the ``test_aws_lambda.py``. Using the tests as a guide to develop your lambdas is probably a good idea. You can also see how to invoke the lambdas directly from Python (and interpret the response).
