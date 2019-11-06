@@ -60,7 +60,7 @@ class TestPythonLambdaUnit():
         credentials we located in env
         """
         key_id, secret = aws_keys
-        cli = get_client(client, key_id, secret)
+        cli = get_client(client, key_id, secret, region='use-east-1')
         assert cli._request_signer._credentials.access_key == key_id
         assert cli._request_signer._credentials.secret_key == secret
 
