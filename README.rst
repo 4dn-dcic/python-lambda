@@ -11,6 +11,10 @@ python-λ
   :alt: Python Versions
   :target: https://pypi.python.org/pypi/python-lambda/
 
+.. image:: https://travis-ci.org/4dn-dcic/python-lambda.svg?branch=master
+  :alt: Build Status
+  :target: https://travis-ci.org/4dn-dcic/python-lambda
+
 Python-lambda is a toolset for developing and deploying *serverless* Python code in AWS Lambda.
 
 Important

@@ -303,7 +303,6 @@ def function_exists(cfg, function_name):
 def delete_function(cfg, function_name):
     """
     Deletes the given function name from AWS Lambda. First checks that it exists.
-    PRE: 'client' is a boto3 lambda client
     Returns True in success, False otherwise
     """
 

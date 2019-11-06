@@ -4,7 +4,9 @@ python:
 - '3.6'
 install:
 - pip install -r requirements.txt
+- pip install coveralls
 script:
-- pytest tests -v
+- pytest --cov aws_lambda -v tests
 after_success:
+- coveralls
 - echo 'Success!'
