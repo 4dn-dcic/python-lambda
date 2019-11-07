@@ -147,14 +147,14 @@ def _install_packages(path, packages):
             pip.main(['install', package, '-t', path, '--ignore-installed', '--no-cache-dir'])
 
 
-def pip_install_to_target(path, requirements=False, local_package=None):
+def pip_install_to_target(path, requirements=None, local_package=None):
     """
     For a given active virtualenv, gather all installed pip packages then
     copy (re-install) them to the path provided.
 
     Args:
         path (str): Path to copy installed pip packages to.
-        requirements (bool):
+        requirements (str):
             If set, only the packages in the requirements.txt
             file are installed.
             The requirements.txt file needs to be in the same directory as the
@@ -169,12 +169,15 @@ def pip_install_to_target(path, requirements=False, local_package=None):
         None
     """
     packages = []
-    if requirements and os.path.exists(requirements):
-        log.info('Gathering requirement from %s' % requirements)
-        data = read_file(requirements)
-        packages.extend(data.splitlines())
-    else:
-        log.error('Could not load requirements from: %s (does it exist?)' % requirements)
+    if requirements:
+        if os.path.exists(requirements):
+            log.info('Gathering requirement from %s' % requirements)
+            data = read_file(requirements)
+            packages.extend(data.splitlines())
+        else:
+            log.error('Could not load requirements from: %s (does it exist?)'
+                      % requirements)
+
     if local_package is not None:
         packages.append(local_package)
     if packages:
