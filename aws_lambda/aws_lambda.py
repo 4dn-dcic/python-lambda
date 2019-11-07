@@ -78,6 +78,8 @@ def deploy_function(function_module, function_name_suffix='', package_objects=No
     function_filename = '.'.join([function_module, 'py'])
     if not cfg.get('handler'):
         cfg['handler'] = '.'.join([function_module, function_handler])
+    if not package_objects:
+        package_objects = [] # don't crash trying to iterate on None below
 
     # create a temporary file (zipfile) and temporary dir (items to zip)
     with tempfile.NamedTemporaryFile(suffix='.zip') as tmp_zip:
@@ -107,7 +109,7 @@ def deploy_function(function_module, function_name_suffix='', package_objects=No
                         archive.write(os.path.join(root, file), arcname=arcname)
 
         # create or update the function
-        if function_exists(cfg, function_name):
+        if function_exists(cfg):
             update_function(cfg, tmp_zip.name, extra_config)
         else:
             create_function(cfg, tmp_zip.name, extra_config)
@@ -145,14 +147,14 @@ def _install_packages(path, packages):
             pip.main(['install', package, '-t', path, '--ignore-installed', '--no-cache-dir'])
 
 
-def pip_install_to_target(path, requirements=False, local_package=None):
+def pip_install_to_target(path, requirements=None, local_package=None):
     """
     For a given active virtualenv, gather all installed pip packages then
     copy (re-install) them to the path provided.
 
     Args:
         path (str): Path to copy installed pip packages to.
-        requirements (bool):
+        requirements (str):
             If set, only the packages in the requirements.txt
             file are installed.
             The requirements.txt file needs to be in the same directory as the
@@ -161,37 +163,27 @@ def pip_install_to_target(path, requirements=False, local_package=None):
             not set.
         local_package (str):
             The path to a local package with should be included in the deploy as
-            well (and/or is not available on PyPi)
+            well
 
     Returns:
         None
     """
     packages = []
-    if not requirements:
-        log.info('Gathering pip packages')
-        pip_major_version = [int(v) for v in pip.__version__.split('.')][0]
-        if pip_major_version >= 10:
-            from pip._internal import operations
-            packages.extend(operations.freeze.freeze())
-        else:
-            packages.extend(pip.operations.freeze.freeze())
-    else:
+    if requirements:
         if os.path.exists(requirements):
             log.info('Gathering requirement from %s' % requirements)
             data = read_file(requirements)
             packages.extend(data.splitlines())
-        elif os.path.exists("requirements.txt"):
-            log.info('Gathering requirement packages')
-            data = read_file("requirements.txt")
-            packages.extend(data.splitlines())
-
-    if not packages:
-        log.info('No dependency packages installed!')
+        else:
+            log.error('Could not load requirements from: %s (does it exist?)'
+                      % requirements)
 
     if local_package is not None:
-        # TODO: actually sdist is probably bettter here...
         packages.append(local_package)
-    _install_packages(path, packages)
+    if packages:
+        _install_packages(path, packages)
+    else:
+        log.info('No dependency packages installed!')
 
 
 def get_role_name(account_id, role):
@@ -207,7 +199,6 @@ def get_account_id(aws_access_key_id, aws_secret_access_key):
 
 def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
     """Shortcut for getting an initialized instance of the boto3 client."""
-
     return boto3.client(
         client,
         aws_access_key_id=aws_access_key_id,
@@ -218,16 +209,10 @@ def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
 
 def create_function(cfg, path_to_zip_file, extra_config=None):
     """Register and upload a function to AWS Lambda."""
-
     byte_stream = read_file(path_to_zip_file, binary_file=True)
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-
-    account_id = get_account_id(aws_access_key_id, aws_secret_access_key)
+    account_id = get_account_id(cfg.get('aws_access_key_id'), cfg.get('aws_secret_access_key'))
     role = get_role_name(account_id, cfg.get('role', 'lambda_basic_execution'))
-
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
 
     func_name = (
         os.environ.get('LAMBDA_FUNCTION_NAME') or cfg.get('function_name')
@@ -260,16 +245,10 @@ def create_function(cfg, path_to_zip_file, extra_config=None):
 
 def update_function(cfg, path_to_zip_file, extra_config=None):
     """Updates the code of an existing Lambda function"""
-
     byte_stream = read_file(path_to_zip_file, binary_file=True)
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-
-    account_id = get_account_id(aws_access_key_id, aws_secret_access_key)
+    account_id = get_account_id(cfg.get('aws_access_key_id'), cfg.get('aws_secret_access_key'))
     role = get_role_name(account_id, cfg.get('role', 'lambda_basic_execution'))
-
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
 
     log.info('Updating lambda function with name: {}'.format(cfg.get('function_name')))
     client.update_function_code(
@@ -297,15 +276,74 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
     client.update_function_configuration(**lambda_update_config)
 
 
-def function_exists(cfg, function_name):
-    """Check whether a function exists or not"""
-
+def _client_from_cfg(cfg):
+    """
+    Helper method for several other methods that sets up a lambda client given
+    a config dictionary containing the relevant AWS keys. If the keys aren't found
+    and there are keys in the environment boto3 will locate them and proceed.
+    """
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    region = cfg.get('region', 'us-east-1')
+    if not aws_secret_access_key or not aws_access_key_id:
+        log.warning('AWS Credentials not found in cfg! Falling back to env...')
+    return get_client('lambda', aws_access_key_id, aws_secret_access_key,
+                        region)
+
+
+def function_exists(cfg):
+    """
+    Check whether the given function in cfg exists or not
+    """
+    client = _client_from_cfg(cfg)
     try:
-        client.get_function(FunctionName=function_name)
+        client.get_function(FunctionName=cfg.get('function_name'))
     except:
         return False
     return True
+
+
+def delete_function(cfg):
+    """
+    Deletes the given function name found in cfg.
+    Returns True in success, False otherwise
+    """
+    client = _client_from_cfg(cfg)
+    try:
+        client.get_function(FunctionName=cfg.get('function_name'))
+        client.delete_function(FunctionName=cfg.get('function_name'))
+    except:
+        return False
+    return True
+
+def invoke_function(cfg, invocation_type='Event', event={}):
+    """
+    Invokes the given lambda function using the given config cfg.
+
+    invocation_type is one of 'Event'|'RequestResponse'|'DryRun'. The default
+    is Event, which will cause this function to execute asynchronously.
+    'RequestResponse' triggers the lambda serially. 'DryRun' just
+    validates parameters/permissions. Note that if you use 'Event' you will likely
+    get no response from this function.
+
+    event is a dictionary containing the arguments needed for this lambda. For
+    example if your lambda is expecting fields 'a' and 'b' in the 'event' that is
+    passed to it from AWS, you would pass in:
+
+        event = {'a': 5, 'b': 13}
+
+    to this function. This information is serialized into JSON and passed to Boto3
+
+    Returns decoded response in success, None otherwise
+    """
+    import json
+    client = _client_from_cfg(cfg)
+    try:
+        resp = client.invoke(FunctionName=cfg.get('function_name'),
+                             InvocationType=invocation_type,
+                             Payload=json.dumps(event))
+    except:
+        log.error('Failed to execute lambda fxn: %s with arguments: \n %s \n %s'
+                    % (cfg.get('function_name'), invocation_type, event))
+        return None
+    return resp['Payload'].read().decode('utf-8')

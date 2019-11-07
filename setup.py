@@ -7,8 +7,8 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 install_requirements = [
-    'boto3>=1.7.42',
-    'botocore>=1.10.42',
+    'boto3>=1.10.7',
+    'botocore>=1.13.7',
     'docutils>=0.14'
 ]
 
