@@ -77,15 +77,16 @@ class TestPythonLambdaIntegration():
         """
         suff = 'integration_test'
         full_name = example_function.config['function_name'] + '_' + suff
+        cfg['function_name'] = full_name
         deploy_function(example_function, function_name_suffix=suff)
-        assert function_exists(cfg, full_name)
-        resp = invoke_function(cfg, full_name)
+        assert function_exists(cfg)
+        resp = invoke_function(cfg, invocation_type='RequestResponse')
         assert resp == '"Hello! My input event is {}"'
         deploy_function(example_function_update, function_name_suffix=suff)
-        resp = invoke_function(cfg, full_name)
+        resp = invoke_function(cfg, invocation_type='RequestResponse')
         assert resp == '"Hello! I have been updated! My input event is {}"'
-        assert delete_function(cfg, full_name)
-        assert not delete_function(cfg, full_name)
+        assert delete_function(cfg)
+        assert not delete_function(cfg)
 
     def test_deploy_lambda_with_requirements(self, cfg):
         """
@@ -94,23 +95,25 @@ class TestPythonLambdaIntegration():
         """
         import json
         full_name = function_with_requirements.config['function_name']
+        cfg['function_name'] = full_name
         req_fpath = './tests/test_lambdas/requirements.txt'
         deploy_function(function_with_requirements, requirements_fpath=req_fpath)
-        assert function_exists(cfg, full_name)
-        resp = invoke_function(cfg, full_name, event={'magic': 17})
+        assert function_exists(cfg)
+        resp = invoke_function(cfg, invocation_type='RequestResponse', event={'magic': 17})
         assert resp == '"I successfully imported pytest! Magic: 17"'
-        assert delete_function(cfg, full_name)
+        assert delete_function(cfg)
 
     def test_deploy_lambda_with_package(self, cfg):
         """
         Deploys and invokes a lambda that has package based dependencies
         """
         full_name = function_with_package.config['function_name']
+        cfg['function_name'] = full_name
         deploy_function(function_with_package, package_objects=[package])
-        assert function_exists(cfg, full_name)
-        resp = invoke_function(cfg, full_name)
+        assert function_exists(cfg)
+        resp = invoke_function(cfg, invocation_type='RequestResponse')
         assert resp == '"I successfully called magic_function: 21"'
-        assert delete_function(cfg, full_name)
+        assert delete_function(cfg)
 
     def test_deploy_lambda_with_package_and_requirements(self, cfg):
         """
@@ -118,18 +121,20 @@ class TestPythonLambdaIntegration():
         dependency and one given from requirements.
         """
         full_name = function_with_req_pack.config['function_name']
+        cfg['function_name'] = full_name
         req_fpath = './tests/test_lambdas/requirements.txt'
         deploy_function(function_with_req_pack, requirements_fpath=req_fpath,
                         package_objects=[package])
-        assert function_exists(cfg, full_name)
-        resp = invoke_function(cfg, full_name)
+        assert function_exists(cfg)
+        resp = invoke_function(cfg, invocation_type='RequestResponse')
         assert resp == '"Imported pytest, magic_function: 21"'
-        assert delete_function(cfg, full_name)
+        assert delete_function(cfg)
 
     def test_invoke_invalid_lambda(self, cfg):
         """
         Tries to execute an invalid lambda. Should fail
         """
         full_name = 'not_a_lambda_name'
-        resp = invoke_function(cfg, full_name)
+        cfg['function_name'] = full_name
+        resp = invoke_function(cfg, invocation_type='RequestResponse')
         assert resp is None

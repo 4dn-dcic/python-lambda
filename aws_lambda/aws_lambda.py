@@ -109,7 +109,7 @@ def deploy_function(function_module, function_name_suffix='', package_objects=No
                         archive.write(os.path.join(root, file), arcname=arcname)
 
         # create or update the function
-        if function_exists(cfg, function_name):
+        if function_exists(cfg):
             update_function(cfg, tmp_zip.name, extra_config)
         else:
             create_function(cfg, tmp_zip.name, extra_config)
@@ -210,14 +210,9 @@ def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
 def create_function(cfg, path_to_zip_file, extra_config=None):
     """Register and upload a function to AWS Lambda."""
     byte_stream = read_file(path_to_zip_file, binary_file=True)
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-
-    account_id = get_account_id(aws_access_key_id, aws_secret_access_key)
+    account_id = get_account_id(cfg.get('aws_access_key_id'), cfg.get('aws_secret_access_key'))
     role = get_role_name(account_id, cfg.get('role', 'lambda_basic_execution'))
-
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
 
     func_name = (
         os.environ.get('LAMBDA_FUNCTION_NAME') or cfg.get('function_name')
@@ -251,14 +246,9 @@ def create_function(cfg, path_to_zip_file, extra_config=None):
 def update_function(cfg, path_to_zip_file, extra_config=None):
     """Updates the code of an existing Lambda function"""
     byte_stream = read_file(path_to_zip_file, binary_file=True)
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-
-    account_id = get_account_id(aws_access_key_id, aws_secret_access_key)
+    account_id = get_account_id(cfg.get('aws_access_key_id'), cfg.get('aws_secret_access_key'))
     role = get_role_name(account_id, cfg.get('role', 'lambda_basic_execution'))
-
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
 
     log.info('Updating lambda function with name: {}'.format(cfg.get('function_name')))
     client.update_function_code(
@@ -288,47 +278,53 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
 
 def _client_from_cfg(cfg):
     """
-    Helper method for the below methods that sets up a lambda client given
-    a config dictionary containing the relevant AWS keys.
+    Helper method for several other methods that sets up a lambda client given
+    a config dictionary containing the relevant AWS keys. If the keys aren't found
+    and there are keys in the environment boto3 will locate them and proceed.
     """
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
     region = cfg.get('region', 'us-east-1')
+    if not aws_secret_access_key or not aws_access_key_id:
+        log.warning('AWS Credentials not found in cfg! Falling back to env...')
     return get_client('lambda', aws_access_key_id, aws_secret_access_key,
                         region)
 
 
-def function_exists(cfg, function_name):
-    """Check whether a function exists or not"""
+def function_exists(cfg):
+    """
+    Check whether the given function in cfg exists or not
+    """
     client = _client_from_cfg(cfg)
     try:
-        client.get_function(FunctionName=function_name)
+        client.get_function(FunctionName=cfg.get('function_name'))
     except:
         return False
     return True
 
 
-def delete_function(cfg, function_name):
+def delete_function(cfg):
     """
-    Deletes the given function name from AWS Lambda. First checks that it exists.
+    Deletes the given function name found in cfg.
     Returns True in success, False otherwise
     """
     client = _client_from_cfg(cfg)
     try:
-        client.get_function(FunctionName=function_name)
-        client.delete_function(FunctionName=function_name)
+        client.get_function(FunctionName=cfg.get('function_name'))
+        client.delete_function(FunctionName=cfg.get('function_name'))
     except:
         return False
     return True
 
-def invoke_function(cfg, function_name, invocation_type='RequestResponse', event={}):
+def invoke_function(cfg, invocation_type='Event', event={}):
     """
     Invokes the given lambda function using the given config cfg.
 
     invocation_type is one of 'Event'|'RequestResponse'|'DryRun'. The default
-    is RequestResponse, which will cause this function to hang until the lambda
-    is completed. 'Event' triggers the lambda asynchronously. 'DryRun' just
-    validates parameters/permissions.
+    is Event, which will cause this function to execute asynchronously.
+    'RequestResponse' triggers the lambda serially. 'DryRun' just
+    validates parameters/permissions. Note that if you use 'Event' you will likely
+    get no response from this function.
 
     event is a dictionary containing the arguments needed for this lambda. For
     example if your lambda is expecting fields 'a' and 'b' in the 'event' that is
@@ -343,11 +339,11 @@ def invoke_function(cfg, function_name, invocation_type='RequestResponse', event
     import json
     client = _client_from_cfg(cfg)
     try:
-        resp = client.invoke(FunctionName=function_name,
+        resp = client.invoke(FunctionName=cfg.get('function_name'),
                              InvocationType=invocation_type,
                              Payload=json.dumps(event))
     except:
         log.error('Failed to execute lambda fxn: %s with arguments: \n %s \n %s'
-                    % (function_name, invocation_type, event))
+                    % (cfg.get('function_name'), invocation_type, event))
         return None
     return resp['Payload'].read().decode('utf-8')
