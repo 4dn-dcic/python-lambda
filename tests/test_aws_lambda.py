@@ -29,12 +29,6 @@ def cfg(aws_keys):
     return conf
 
 
-@pytest.fixture
-def lambda_client(aws_keys):
-    key_id, secret = aws_keys
-    return get_client('lambda', key_id, secret, region='us-east-1')
-
-
 class TestPythonLambdaUnit():
     """ Class containing unit (non-integration) tests for Python-Lambda """
 
@@ -75,7 +69,7 @@ class TestPythonLambdaIntegration():
 
     pytestmark = [pytest.mark.integration]
 
-    def test_deploy_lambda(self, cfg, lambda_client):
+    def test_deploy_lambda(self, cfg):
         """
         Deploys a lambda function, tests that we can see/use it
         Updates that same function with different config, invokes to verify the
@@ -85,15 +79,15 @@ class TestPythonLambdaIntegration():
         full_name = example_function.config['function_name'] + '_' + suff
         deploy_function(example_function, function_name_suffix=suff)
         assert function_exists(cfg, full_name)
-        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
-        assert resp['Payload'].read().decode('utf-8') == '"Hello! My input event is {}"'
+        resp = invoke_function(cfg, full_name)
+        assert resp == '"Hello! My input event is {}"'
         deploy_function(example_function_update, function_name_suffix=suff)
-        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
-        assert resp['Payload'].read().decode('utf-8') == '"Hello! I have been updated! My input event is {}"'
+        resp = invoke_function(cfg, full_name)
+        assert resp == '"Hello! I have been updated! My input event is {}"'
         assert delete_function(cfg, full_name)
         assert not delete_function(cfg, full_name)
 
-    def test_deploy_lambda_with_requirements(self, cfg, lambda_client):
+    def test_deploy_lambda_with_requirements(self, cfg):
         """
         Deploys and invokes a lambda that has requirements, this time with no suffix
         Also passes an argument that is checked
@@ -103,24 +97,22 @@ class TestPythonLambdaIntegration():
         req_fpath = './tests/test_lambdas/requirements.txt'
         deploy_function(function_with_requirements, requirements_fpath=req_fpath)
         assert function_exists(cfg, full_name)
-        resp = lambda_client.invoke(FunctionName=full_name,
-                                    InvocationType='RequestResponse',
-                                    Payload=json.dumps({'magic': 17}))
-        assert resp['Payload'].read().decode('utf-8') == '"I successfully imported pytest! Magic: 17"'
+        resp = invoke_function(cfg, full_name, event={'magic': 17})
+        assert resp == '"I successfully imported pytest! Magic: 17"'
         assert delete_function(cfg, full_name)
 
-    def test_deploy_lambda_with_package(self, cfg, lambda_client):
+    def test_deploy_lambda_with_package(self, cfg):
         """
         Deploys and invokes a lambda that has package based dependencies
         """
         full_name = function_with_package.config['function_name']
         deploy_function(function_with_package, package_objects=[package])
         assert function_exists(cfg, full_name)
-        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
-        assert resp['Payload'].read().decode('utf-8') == '"I successfully called magic_function: 21"'
+        resp = invoke_function(cfg, full_name)
+        assert resp == '"I successfully called magic_function: 21"'
         assert delete_function(cfg, full_name)
 
-    def test_deploy_lambda_with_package_and_requirements(self, cfg, lambda_client):
+    def test_deploy_lambda_with_package_and_requirements(self, cfg):
         """
         Deploys and invokes a lambda that uses both an independently packaged
         dependency and one given from requirements.
@@ -130,6 +122,14 @@ class TestPythonLambdaIntegration():
         deploy_function(function_with_req_pack, requirements_fpath=req_fpath,
                         package_objects=[package])
         assert function_exists(cfg, full_name)
-        resp = lambda_client.invoke(FunctionName=full_name, InvocationType='RequestResponse')
-        assert resp['Payload'].read().decode('utf-8') == '"Imported pytest, magic_function: 21"'
+        resp = invoke_function(cfg, full_name)
+        assert resp == '"Imported pytest, magic_function: 21"'
         assert delete_function(cfg, full_name)
+
+    def test_invoke_invalid_lambda(self, cfg):
+        """
+        Tries to execute an invalid lambda. Should fail
+        """
+        full_name = 'not_a_lambda_name'
+        resp = invoke_function(cfg, full_name)
+        assert resp is None

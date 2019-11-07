@@ -286,13 +286,22 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
     client.update_function_configuration(**lambda_update_config)
 
 
+def _client_from_cfg(cfg):
+    """
+    Helper method for the below methods that sets up a lambda client given
+    a config dictionary containing the relevant AWS key.
+    """
+    aws_access_key_id = cfg.get('aws_access_key_id')
+    aws_secret_access_key = cfg.get('aws_secret_access_key')
+    region = cfg.get('region', 'us-east-1')
+    return get_client('lambda', aws_access_key_id, aws_secret_access_key,
+                        cfg.get('region'))
+
+
 def function_exists(cfg, function_name):
     """Check whether a function exists or not"""
 
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
     try:
         client.get_function(FunctionName=function_name)
     except:
@@ -306,13 +315,42 @@ def delete_function(cfg, function_name):
     Returns True in success, False otherwise
     """
 
-    aws_access_key_id = cfg.get('aws_access_key_id')
-    aws_secret_access_key = cfg.get('aws_secret_access_key')
-    client = get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+    client = _client_from_cfg(cfg)
     try:
         client.get_function(FunctionName=function_name)
         client.delete_function(FunctionName=function_name)
     except:
         return False
     return True
+
+def invoke_function(cfg, function_name, invocation_type='RequestResponse', event={}):
+    """
+    Invokes the given lambda function using the given client.
+
+    invocation_type is one of 'Event'|'RequestResponse'|'DryRun'. The default
+    is RequestResponse, which will cause this function to hang until the lambda
+    is completed. 'Event' triggers the lambda asynchronously. 'DryRun' just
+    validates paremeters/permissions.
+
+    event is a dictionary containing the arguments needed for this lambda. For
+    example if your lambda is expecting fields 'a' and 'b' in the 'event' that is
+    passed to it from AWS, you would pass in:
+
+        event = {'a': 5, 'b': 13}
+
+    to this function. This information is serialized into JSON and passed to Boto3
+
+    Returns decoded response in success, None otherwise
+    """
+
+    import json
+    client = _client_from_cfg(cfg)
+    try:
+        resp = client.invoke(FunctionName=function_name,
+                             InvocationType=invocation_type,
+                             Payload=json.dumps(event))
+    except:
+        log.error('Failed to execute lambda fxn: %s with arguments: \n %s \n %s'
+                    % (function_name, invocation_type, event))
+        return None
+    return resp['Payload'].read().decode('utf-8')
