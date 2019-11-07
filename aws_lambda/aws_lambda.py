@@ -199,7 +199,6 @@ def get_account_id(aws_access_key_id, aws_secret_access_key):
 
 def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
     """Shortcut for getting an initialized instance of the boto3 client."""
-
     return boto3.client(
         client,
         aws_access_key_id=aws_access_key_id,
@@ -210,7 +209,6 @@ def get_client(client, aws_access_key_id, aws_secret_access_key, region=None):
 
 def create_function(cfg, path_to_zip_file, extra_config=None):
     """Register and upload a function to AWS Lambda."""
-
     byte_stream = read_file(path_to_zip_file, binary_file=True)
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
@@ -252,7 +250,6 @@ def create_function(cfg, path_to_zip_file, extra_config=None):
 
 def update_function(cfg, path_to_zip_file, extra_config=None):
     """Updates the code of an existing Lambda function"""
-
     byte_stream = read_file(path_to_zip_file, binary_file=True)
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
@@ -292,18 +289,17 @@ def update_function(cfg, path_to_zip_file, extra_config=None):
 def _client_from_cfg(cfg):
     """
     Helper method for the below methods that sets up a lambda client given
-    a config dictionary containing the relevant AWS key.
+    a config dictionary containing the relevant AWS keys.
     """
     aws_access_key_id = cfg.get('aws_access_key_id')
     aws_secret_access_key = cfg.get('aws_secret_access_key')
     region = cfg.get('region', 'us-east-1')
     return get_client('lambda', aws_access_key_id, aws_secret_access_key,
-                        cfg.get('region'))
+                        region)
 
 
 def function_exists(cfg, function_name):
     """Check whether a function exists or not"""
-
     client = _client_from_cfg(cfg)
     try:
         client.get_function(FunctionName=function_name)
@@ -317,7 +313,6 @@ def delete_function(cfg, function_name):
     Deletes the given function name from AWS Lambda. First checks that it exists.
     Returns True in success, False otherwise
     """
-
     client = _client_from_cfg(cfg)
     try:
         client.get_function(FunctionName=function_name)
@@ -328,12 +323,12 @@ def delete_function(cfg, function_name):
 
 def invoke_function(cfg, function_name, invocation_type='RequestResponse', event={}):
     """
-    Invokes the given lambda function using the given client.
+    Invokes the given lambda function using the given config cfg.
 
     invocation_type is one of 'Event'|'RequestResponse'|'DryRun'. The default
     is RequestResponse, which will cause this function to hang until the lambda
     is completed. 'Event' triggers the lambda asynchronously. 'DryRun' just
-    validates paremeters/permissions.
+    validates parameters/permissions.
 
     event is a dictionary containing the arguments needed for this lambda. For
     example if your lambda is expecting fields 'a' and 'b' in the 'event' that is
@@ -345,7 +340,6 @@ def invoke_function(cfg, function_name, invocation_type='RequestResponse', event
 
     Returns decoded response in success, None otherwise
     """
-
     import json
     client = _client_from_cfg(cfg)
     try:
