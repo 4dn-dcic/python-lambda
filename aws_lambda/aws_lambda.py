@@ -163,24 +163,24 @@ def pip_install_to_target(path, requirements=False, local_package=None):
             not set.
         local_package (str):
             The path to a local package with should be included in the deploy as
-            well (and/or is not available on PyPi)
+            well
 
     Returns:
         None
     """
     packages = []
-    if requirements:
-        if os.path.exists(requirements):
-            log.info('Gathering requirement from %s' % requirements)
-            data = read_file(requirements)
-            packages.extend(data.splitlines())
-
-    if not packages:
-        log.info('No dependency packages installed!')
-
+    if requirements and os.path.exists(requirements):
+        log.info('Gathering requirement from %s' % requirements)
+        data = read_file(requirements)
+        packages.extend(data.splitlines())
+    else:
+        log.error('Could not load requirements from: %s (does it exist?)' % requirements)
     if local_package is not None:
         packages.append(local_package)
-    _install_packages(path, packages)
+    if packages:
+        _install_packages(path, packages)
+    else:
+        log.info('No dependency packages installed!')
 
 
 def get_role_name(account_id, role):

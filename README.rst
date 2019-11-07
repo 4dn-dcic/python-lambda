@@ -42,7 +42,7 @@ Requirements
 Getting Started
 ===============
 
-Using this library is intended to be as straightforward as possible. We  Code for a very simple lambda used in the tests is reproduced below.
+Using this library is intended to be as straightforward as possible. Code for a very simple lambda used in the tests is reproduced below.
 
 .. code:: python
 
