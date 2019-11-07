@@ -27,7 +27,7 @@ setup(
     version=pkg_version,
     description="FORKED for 4dn-dcic. Use to package and deploy lambda functions.",
     long_description=readme,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     author="Carl Vitzthum, Soo Lee",
     author_email='carl_vitzthum@hms.harvard.edu',
     url='https://github.com/4dn-dcic/python-lambda',
