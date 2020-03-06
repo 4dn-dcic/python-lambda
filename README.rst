@@ -39,38 +39,42 @@ is not as simple as it could be.
 The *Python-Lambda* library takes away the guess work of developing your Python-Lambda
 services by providing you a toolset to streamline the annoying parts.
 
-Requirements
-============
+System Requirements
+===================
 
 * Python 3.6
 * Pip (Any should work)
 * Virtualenv (>=15.0.0)
-* Virtualenvwrapper (>=4.7.1) [optional]
 
-Setting Up a Virtual Environment
-================================
+Setting Up a Virtual Environment (OPTIONAL)
+===========================================
 
-Make sure you're working in a virtual environment. Here are three ways to do that:
+This is optional.
+If you do not create a virtual environment, Poetry will make one for you.
+But there are still good reasons you might want to make your own, so here
+are three ways to do it:
 
 * If you have virtualenvwrapper that knows to use Python 3.6::
 
-    mkvirtualenv myenv
+   mkvirtualenv myenv
 
 * If you have virtualenv but not virtualenvwrapper, and you have python3.6 in your ``PATH``::
 
-    virtualenv myenv -p python3.6
+   virtualenv myenv -p python3.6
 
 * If you are using ``pyenv`` to control what environment you use::
 
-    pyenv exec python -m venv myenv
+   pyenv exec python -m venv myenv
 
-Once you have created a virtual environment, install requirements::
 
-    pip install -r requirements.txt dev-requirements.txt
+Installing Poetry in a Virtual Environment
+==========================================
 
-Install additional support for development::
+Once you have created a virtual environment, or have decided to just let Poetry handle that,
+install with poetry::
 
-    python setup.py install
+   poetry install
+
 
 Getting Started
 ===============
@@ -90,7 +94,6 @@ Code for a very simple lambda used in the tests is reproduced below.
       'role': 'helloworld',
       'description': 'Test lambda'
   }
-
 
   def handler(event, context):
       return 'Hello! My input event is %s' % event
@@ -142,3 +145,4 @@ mention its name. To see verbose output, use ``-v``; or use ``-vv`` for extra-ve
 as in::
 
     pytest -vv -k test_deploy_lambda_with_package_and_requirements
+

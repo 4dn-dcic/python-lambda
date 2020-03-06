@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "python-lambda-4dn"
+version = "2.0.0b1"
+description = "A forked version of python-lambda for 4DN-DCIC use in packaging and deploying lambda functions."
+authors = ["4DN-DCIC Team <support@4dnucleome.org>"]
+license = "ISCL"
+keywords = ["python-lambda"]
+readme = "README.rst"
+homepage = "https://github.com/4dn-dcic/python-lambda"
+repository = "https://github.com/4dn-dcic/python-lambda"
+packages = [
+  { include="aws_lambda", from="." }
+]
+classifiers = [
+  'Development Status :: 4 - Beta',
+  'Intended Audience :: Developers',
+  'License :: OSI Approved :: MIT License',
+  'Natural Language :: English',
+  'Programming Language :: Python :: 3.6',
+]
+
+[tool.poetry.dependencies]
+python = ">=3.6,<3.7"
+"botocore" = ">=1.13.7,<2"
+"boto3" = ">=1.10.7,<2"
+"docutils" = ">=0.14,<0.16"
+"six" = ">=1.12.0,<2"
+
+[tool.poetry.dev-dependencies]
+# This (coveralls) is installed by .travis.yml. Should we depend on it here? -kmp 6-Mar-2020
+# "coveralls" = ">=1.11.1,<2"
+"pytest" = ">=5.2.2,<6"
+"pytest-cov" = ">=2.8.1,<3"
+# pygments is only needed by PyCharm to render the README
+"pygments" = ">=2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
