@@ -29,8 +29,8 @@ python = ">=3.6,<3.7"
 [tool.poetry.dev-dependencies]
 # This (coveralls) is installed by .travis.yml. Should we depend on it here? -kmp 6-Mar-2020
 # "coveralls" = ">=1.11.1,<2"
-"pytest" = ">=5.2.2,<6"
-"pytest-cov" = ">=2.8.1,<3"
+"pytest" = ">=3.0.5,<4"
+"pytest-cov" = ">=2.3.1,<3"
 # pygments is only needed by PyCharm to render the README
 "pygments" = ">=2"
 
