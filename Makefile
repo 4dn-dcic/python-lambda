@@ -26,8 +26,7 @@ lint:
 	flake8 python-lambda tests
 
 release: clean
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+	poetry publish
 
 install: clean
-	python setup.py install
+	poetry install
