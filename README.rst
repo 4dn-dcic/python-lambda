@@ -43,7 +43,7 @@ Important Legal Notice
 ======================
 
 The original `Python-lambda <https://pypi.python.org/pypi/python-lambda>`_ is licensed under
-an ISCL license. `The version of that license active at time of the fork is here
+an ISC license. `The version of that license active at time of the fork is here
 <https://github.com/nficano/python-lambda/blob/01f1b8c3651de4e772618851b2117277ca95b1b4/LICENSE>`_.
 Github's summary of that license describes it as:
 
