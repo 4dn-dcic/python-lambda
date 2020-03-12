@@ -34,13 +34,10 @@ class TestPythonLambdaUnit():
 
     pytestmark = [pytest.mark.unit]
 
-    # No more _version.py file, so no more version to check.
-    # Anyone who wants the version can get it from pkg_resources a different way. -kmp 12-Mar-2020
-    #
-    # def test_get_version(self):
-    #     """ Because coverage, thats why! """
-    #     from aws_lambda._version import __version__
-    #     assert len(__version__.split('.')) == 3 # should be x.x.x
+    def test_get_version(self):
+        """ Because coverage, thats why! """
+        from aws_lambda._version import __version__
+        assert len(__version__.split('.')) == 3 # should be x.x.x
 
     def test_get_role_name(self):
         """ Basic test that validates our role_name format """
