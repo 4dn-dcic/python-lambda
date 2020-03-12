@@ -3,7 +3,7 @@ name = "python-lambda-4dn"
 version = "2.0.0b1"
 description = "A forked version of python-lambda for 4DN-DCIC use in packaging and deploying lambda functions."
 authors = ["4DN-DCIC Team <support@4dnucleome.org>"]
-license = "ISCL"
+license = "MIT"
 keywords = ["python-lambda"]
 readme = "README.rst"
 homepage = "https://github.com/4dn-dcic/python-lambda"
@@ -17,6 +17,11 @@ classifiers = [
   'License :: OSI Approved :: MIT License',
   'Natural Language :: English',
   'Programming Language :: Python :: 3.6',
+]
+include = [
+  # The history file is unreferenced and empty. -kmp 12-Mar-2020
+  # "HISTORY.rst",
+  "LICENSE",
 ]
 
 [tool.poetry.dependencies]

@@ -20,12 +20,12 @@ python-lambda-4dn
 
 This is a toolset for developing and deploying *serverless* Python code in AWS Lambda.
 
-Important
-=========
-This is a FORK of Nick Ficano's `Python-lambda <https://pypi.python.org/pypi/python-lambda>`_
-package. It will NOT be updated regularly and is frozen for the needs of projects at the
-`4D Nucleome Data Coordination and Integration Center (4DN-DCIC)
-<https://github.com/4dn-dcic>`_.
+.. Important::
+
+ This is a FORK of Nick Ficano's `Python-lambda <https://pypi.python.org/pypi/python-lambda>`_
+ package. It will NOT be updated regularly and is frozen for the needs of projects at the
+ `4D Nucleome Data Coordination and Integration Center (4DN-DCIC)
+ <https://github.com/4dn-dcic>`_.
 
 Description
 ===========
@@ -38,6 +38,25 @@ is not as simple as it could be.
 
 The *Python-Lambda* library takes away the guess work of developing your Python-Lambda
 services by providing you a toolset to streamline the annoying parts.
+
+Important Legal Notice
+======================
+
+The original `Python-lambda <https://pypi.python.org/pypi/python-lambda>`_ is licensed under
+an ISCL license. `The version of that license active at time of the fork is here
+<https://github.com/nficano/python-lambda/blob/01f1b8c3651de4e772618851b2117277ca95b1b4/LICENSE>`_.
+Github's summary of that license describes it as:
+
+ A permissive license lets people do anything with your code with proper attribution
+ and without warranty. The ISC license is functionally equivalent to the BSD 2-Clause
+ and MIT licenses, removing some language that is no longer necessary.
+
+Since our derivative work is covered under the MIT license, and on a theory
+that the underlying license is equivalent to the MIT license,
+we shorthand our licensing requirements as just "MIT" because that's more consistent
+with how we describe licensing for other 4DN-DCIC software.
+However, for the properly formal legal detail,
+please refer to our actual `LICENSE <LICENSE>`_.
 
 System Requirements
 ===================
