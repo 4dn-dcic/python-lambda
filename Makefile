@@ -30,3 +30,7 @@ release: clean
 
 install: clean
 	poetry install
+
+publish:
+	@bin/publish
+
