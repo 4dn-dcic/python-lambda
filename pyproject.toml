@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-lambda-4dn"
-version = "2.0.0b2"
+version = "2.0.0b3"
 description = "A forked version of python-lambda for 4DN-DCIC use in packaging and deploying lambda functions."
 authors = ["4DN-DCIC Team <support@4dnucleome.org>"]
 license = "MIT"
