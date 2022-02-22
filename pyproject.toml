@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-lambda-4dn"
-version = "2.0.0b3"
+version = "3.0.0b0"
 description = "A forked version of python-lambda for 4DN-DCIC use in packaging and deploying lambda functions."
 authors = ["4DN-DCIC Team <support@4dnucleome.org>"]
 license = "MIT"
@@ -25,7 +25,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.6,<3.7"
+python = ">=3.6,<3.8"
 "botocore" = ">=1.13.7,<2"
 "boto3" = ">=1.10.7,<2"
 "docutils" = ">=0.14,<0.16"
@@ -40,5 +40,6 @@ python = ">=3.6,<3.7"
 "pygments" = ">=2"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
