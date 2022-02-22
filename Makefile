@@ -34,3 +34,5 @@ install: clean
 publish:
 	@bin/publish
 
+test:
+	poetry run pytest
